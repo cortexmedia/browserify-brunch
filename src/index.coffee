@@ -78,16 +78,17 @@ module.exports = class BrowserifyBrunch
     if @watching
       return callback null, fileContents, filePath
 
-    __triggered = false
+    instances = (instance for own compiledPath, instance of @__instances when instance.matcher filePath)
 
-    for compiledPath, instance of @__instances
-      continue if not instance.matcher filePath
-      continue if instance.running
+    nextJob = (error) ->
+      if error || instances.length == 0
+        callback error, fileContents, filePath
+      else
+        instances.pop().handleUpdate nextJob
+      return
 
-      __triggered = true
-      instance.handleUpdate arguments...
+    nextJob null, fileContents, filePath
 
-    callback(null, fileContents, filePath) if not __triggered
     null
 
   teardown: ->

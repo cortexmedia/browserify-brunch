@@ -18,6 +18,8 @@ class BrowserifyInstance
       for own k,v of @data.bundleOptions
         options[k] = v
 
+    @callbacks = []
+
     @__w = browserify "./#{@data.entry}", options
     @__w = watchify(@__w) if @data.main.watching
 
@@ -32,17 +34,39 @@ class BrowserifyInstance
 
     null
 
-  handleUpdate: (fileContents, filePath, callback) =>
+  handleUpdate: (callback) =>
+    if callback?
+      @callbacks.push callback
+
+    if @running
+      return
+
+    callbacks = @callbacks
+    @callbacks = []
+
+    callback = (error) =>
+      for cb in callbacks
+        setImmediate cb.bind(this, error)
+
+      if @callbacks.length > 0
+        setImmediate this.handleUpdate.bind(this)
+
+      return
+
     @running = true
     @data.onBeforeBundle?.apply this, [@__w]
 
     @__w.bundle (error, js) =>
-      if error or not js?
+      if not js?
+        error ?= new Error('Browserify Error')
+
+      if error
+        @running = false
         if not @data.main.watching
           throw error
 
         console.error 'Browserify Error', error
-        callback? error || true, fileContents, filePath
+        callback error
         return
 
       # Browserify > 5.0.0 gives us a buffer object, must convert it to string.
@@ -65,7 +89,9 @@ class BrowserifyInstance
       @running = false
       @data.onAfterBundle?.apply this, arguments
       @data.main.__autoReloadServer?.sendMessage 'page'
-      callback? error, fileContents, filePath
+
+      callback()
+      return
 
 module.exports = {
   BrowserifyInstance
