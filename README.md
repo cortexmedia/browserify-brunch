@@ -46,7 +46,7 @@ exports.config =
           matcher: /^app/
 
           # Direct access to the browserify bundler to do anything you need.
-          onBrowserifyLoad: (bundler) -> console.log 'onWatchifyLoad'
+          onBrowserifyLoad: (bundler) -> console.log 'onBrowserifyLoad'
 
           # Any files watched by browserify won't be in brunch's regular
           # pipeline. If you do anything before your javascripts are compiled,

@@ -1,5 +1,4 @@
 browserify = require 'browserify'
-watchify = require 'watchify'
 mkdirp = require 'mkdirp'
 path = require 'path'
 {openSync, writeSync, closeSync} = require 'fs'
@@ -9,8 +8,6 @@ class BrowserifyInstance
   constructor: (@data) ->
     options =
       debug: !@data.main.production
-    for own k,v of watchify.args
-      options[k] = v
     for own k,v of @data.instanceOptions
       options[k] = v
     if @data.bundleOptions
@@ -21,16 +18,11 @@ class BrowserifyInstance
     @callbacks = []
 
     @__w = browserify "./#{@data.entry}", options
-    @__w = watchify(@__w) if @data.main.watching
 
     for transform in @data.transforms
       @__w.transform(transform)
 
     @data.onBrowserifyLoad?.apply this, [@__w]
-
-    if @data.main.watching
-      @__w.on 'update', @handleUpdate
-      @handleUpdate()
 
     null
 

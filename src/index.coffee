@@ -75,9 +75,6 @@ module.exports = class BrowserifyBrunch
     if @__autoReloadServer? and path.basename(filePath) is 'auto-reload-browserify.js'
       return callback null, fileContents.replace(9812, @__autoReloadServer.port), filePath
 
-    if @watching
-      return callback null, fileContents, filePath
-
     instances = (instance for own compiledPath, instance of @__instances when instance.matcher filePath)
 
     nextJob = (error) ->
