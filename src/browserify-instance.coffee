@@ -38,6 +38,8 @@ class BrowserifyInstance
 
     @__w.bundle (error, js) =>
       if error or not js?
+        @running = false
+
         if not @data.main.watching
           throw error
 
